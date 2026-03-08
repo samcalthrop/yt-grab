@@ -6,8 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write
-  packages: write
+  contents: read  # PAT will be used for release creation
 
 jobs:
   build:
@@ -17,18 +16,14 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary_name: yt-grab-linux
-
           - os: macos-latest
             target: x86_64-apple-darwin
             binary_name: yt-grab-macos
-
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary_name: yt-grab-windows.exe
 
     runs-on: ${{ matrix.os }}
-
-    permissions: write-all
 
     steps:
       - uses: actions/checkout@v4
@@ -36,36 +31,51 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build release
+      - name: Build Rust binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Download yt-dlp
+      - name: Bundle yt-dlp and ffmpeg
+        shell: bash
         run: |
           mkdir -p portable/bin
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            curl -L -o portable/bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
-            curl -L -o portable/bin/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-            unzip portable/bin/ffmpeg.zip -d portable/bin/ffmpeg
-          else
+          if [[ "$RUNNER_OS" != "Windows" ]]; then
+            # Linux/macOS
             curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
             curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
             tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin
+            chmod +x portable/bin/yt-dlp
+            chmod +x portable/bin/ffmpeg/ffmpeg
           fi
-          chmod +x portable/bin/yt-dlp
-          chmod +x portable/bin/ffmpeg/ffmpeg
 
-      - name: Copy Rust binary
+      - name: Bundle yt-dlp and ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir -Force portable\bin
+          Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile portable\bin\yt-dlp.exe
+          Invoke-WebRequest -Uri https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile portable\bin\ffmpeg.zip
+          Expand-Archive portable\bin\ffmpeg.zip -DestinationPath portable\bin\ffmpeg
+
+      - name: Copy Rust binary to portable folder
         run: |
           mkdir -p portable/bin
-          cp target/${{ matrix.target }}/release/yt-grab portable/bin/
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            cp target/${{ matrix.target }}/release/yt-grab.exe portable/bin/yt-grab.exe
+          else
+            cp target/${{ matrix.target }}/release/yt-grab portable/bin/yt-grab
+          fi
 
       - name: Create release zip
         run: |
           cd portable
-          zip -r ../yt-grab-${{ matrix.binary_name }}.zip .
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            Compress-Archive -Path * -DestinationPath ../yt-grab-${{ matrix.binary_name }}.zip
+          else
+            zip -r ../yt-grab-${{ matrix.binary_name }}.zip .
+          fi
           cd ..
 
-      - name: Upload release artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.binary_name }}
@@ -74,11 +84,10 @@ jobs:
   publish_release:
     needs: build
     runs-on: ubuntu-latest
-
-    permissions: write-all
-
     steps:
-      - uses: softprops/action-gh-release@v2
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          files: |
-            yt-grab-*.zip
+          files: yt-grab-*.zip
