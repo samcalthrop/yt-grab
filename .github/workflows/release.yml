@@ -74,6 +74,9 @@ jobs:
   publish_release:
     needs: build
     runs-on: ubuntu-latest
+
+    permissions: write-all
+
     steps:
       - uses: softprops/action-gh-release@v2
         with:
