@@ -12,44 +12,64 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            name: yt-grab-linux
+            binary_name: yt-grab-linux
+
           - os: macos-latest
             target: x86_64-apple-darwin
-            name: yt-grab-macos
+            binary_name: yt-grab-macos
+
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            name: yt-grab-windows.exe
+            binary_name: yt-grab-windows.exe
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Build
-        run: cargo build --release
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Rename binary
+      - name: Download yt-dlp
         run: |
-          mkdir dist
-          cp target/release/yt-grab dist/${{ matrix.name }}
-        shell: bash
+          mkdir -p portable/bin
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            curl -L -o portable/bin/yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+            curl -L -o portable/bin/ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+            unzip portable/bin/ffmpeg.zip -d portable/bin/ffmpeg
+          else
+            curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+            curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+            tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin
+          fi
+          chmod +x portable/bin/yt-dlp
+          chmod +x portable/bin/ffmpeg/ffmpeg
 
-      - name: Upload artifact
+      - name: Copy Rust binary
+        run: |
+          mkdir -p portable/bin
+          cp target/${{ matrix.target }}/release/yt-grab portable/bin/
+
+      - name: Create release zip
+        run: |
+          cd portable
+          zip -r ../yt-grab-${{ matrix.binary_name }}.zip .
+          cd ..
+
+      - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}
-          path: dist/*
+          name: ${{ matrix.binary_name }}
+          path: yt-grab-${{ matrix.binary_name }}.zip
 
-  release:
-      needs: build
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: actions/download-artifact@v4
-
-        - uses: softprops/action-gh-release@v2
-          with:
-            files: |
-              **/*
+  publish_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            yt-grab-*.zip
