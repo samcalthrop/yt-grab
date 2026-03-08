@@ -2,6 +2,8 @@
 name = "yt-grab"
 version = "0.1.0"
 edition = "2024"
+description = "Beginner-friendly interactive yt-dlp CLI tool"
+license = "MIT"
 
 [dependencies]
 dialoguer = "0.12.0"
