@@ -46,7 +46,8 @@ jobs:
             # Linux/macOS
             curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
             curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-            tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin
+            mkdir -p portable/bin/ffmpeg
+            tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin/ffmpeg --strip-components=1
             chmod +x portable/bin/yt-dlp
             chmod +x portable/bin/ffmpeg/ffmpeg
           fi
