@@ -18,15 +18,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            out: yt-grab-linux
+            out: yt-grab-linux-x64
 
           - os: macos-latest
             target: x86_64-apple-darwin
-            out: yt-grab-macos
+            out: yt-grab-macos-x64
+
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            out: yt-grab-macos-arm64
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            out: yt-grab-windows.exe
+            out: yt-grab-windows-x64.exe
 
     steps:
       - uses: actions/checkout@v4
