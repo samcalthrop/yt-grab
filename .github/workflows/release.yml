@@ -59,14 +59,19 @@ jobs:
           Invoke-WebRequest -Uri https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile portable\bin\ffmpeg.zip
           Expand-Archive portable\bin\ffmpeg.zip -DestinationPath portable\bin\ffmpeg
 
-      - name: Copy Rust binary to portable folder
+      - name: Copy Rust binary to portable folder (UNIX)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           mkdir -p portable/bin
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            cp target/${{ matrix.target }}/release/yt-grab.exe portable/bin/yt-grab.exe
-          else
-            cp target/${{ matrix.target }}/release/yt-grab portable/bin/yt-grab
-          fi
+          cp target/${{ matrix.target }}/release/yt-grab portable/bin/yt-grab
+
+      - name: Copy Rust binary to portable folder (WINDOWS)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir -Force portable\bin
+          Copy-Item -Path target\${{ matrix.target }}\release\yt-grab.exe -Destination portable\bin\yt-grab.exe
 
       - name: Create release zip
         run: |
