@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - main
 
 permissions:
   contents: read  # PAT will be used for release creation
