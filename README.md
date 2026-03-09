@@ -8,11 +8,11 @@ Run the command corresponding to your OS in your terminal:
 ## UNIX (_macOS/ linux_)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/samcalthrop/yt-grab/tree/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/samcalthrop/yt-grab/main/scripts/install.sh | bash
 ```
 
 ## Windows
 
 ```pwsh
-powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/samcalthrop/yt-grab/tree/main/scripts/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/samcalthrop/yt-grab/main/scripts/install.ps1 | iex"
 ```
