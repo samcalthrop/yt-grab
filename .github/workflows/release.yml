@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: read  # PAT will be used for release creation
+  contents: read
 
 jobs:
   build:
@@ -37,47 +37,60 @@ jobs:
       - name: Build Rust binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      # ---------- Bundle yt-dlp and ffmpeg ----------
-      - name: Bundle yt-dlp and ffmpeg (UNIX)
+      # ---------------- Unix bundle ----------------
+      - name: Bundle yt-dlp and ffmpeg (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p portable/bin
-          curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-          curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+
+          # yt-dlp
+          curl -L -o portable/bin/yt-dlp \
+            https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+
+          # ffmpeg
+          curl -L -o portable/bin/ffmpeg.tar.xz \
+            https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
           mkdir -p portable/bin/ffmpeg
           tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin/ffmpeg --strip-components=1
-          chmod +x portable/bin/yt-dlp
-          chmod +x portable/bin/ffmpeg/ffmpeg
-          cp target/${{ matrix.target }}/release/yt-grab portable/bin/yt-grab
-          chmod +x portable/bin/yt-grab
 
-      - name: Bundle yt-dlp and ffmpeg (WINDOWS)
+          # Rust binary
+          cp target/${{ matrix.target }}/release/yt-grab portable/bin/yt-grab
+          chmod +x portable/bin/yt-grab yt-dlp ffmpeg/ffmpeg
+
+          # Verify folder
+          ls -R portable/bin
+
+      # ---------------- Windows bundle ----------------
+      - name: Bundle yt-dlp and ffmpeg (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          mkdir -Force portable\bin
+          mkdir portable\bin -Force
 
-          # Download yt-dlp
+          # yt-dlp
           Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile portable\bin\yt-dlp.exe
 
-          # Download ffmpeg
+          # ffmpeg
           Invoke-WebRequest -Uri https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile portable\bin\ffmpeg.zip
-          Expand-Archive portable\bin\ffmpeg.zip -DestinationPath portable\bin\ffmpeg
+          Expand-Archive portable\bin\ffmpeg.zip portable\bin\ffmpeg
 
-          # Copy Rust binary
-          Copy-Item target\${{ matrix.target }}\release\yt-grab.exe -Destination portable\bin\yt-grab.exe
+          # Rust binary
+          Copy-Item target\${{ matrix.target }}\release\yt-grab.exe portable\bin\yt-grab.exe
 
-      # ---------- Create zip ----------
-      - name: Create release zip (UNIX)
+          # Verify folder
+          Get-ChildItem -Recurse portable\bin
+
+      # ---------------- Create zip ----------------
+      - name: Create release zip (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           cd portable/bin
-          zip -r ../../yt-grab-${{ matrix.binary_name }}.zip .
+          zip -r ../../yt-grab-${{ matrix.binary_name }}.zip ./*
           cd ../..
 
-      - name: Create release zip (WINDOWS)
+      - name: Create release zip (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
