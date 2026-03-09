@@ -23,6 +23,8 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary_name: yt-grab-windows.exe
 
+      fail-fast: false
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -80,6 +82,12 @@ jobs:
         with:
           name: ${{ matrix.binary_name }}
           path: yt-grab-${{ matrix.binary_name }}.zip
+
+      - name: Show build output folder
+        run: ls -R target
+
+      - name: Build Rust binary
+        run: cargo build --release --target ${{ matrix.target }} -v
 
   publish_release:
     needs: build
