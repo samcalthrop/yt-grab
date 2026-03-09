@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - main
 
 permissions:
   contents: read  # PAT will be used for release creation
@@ -73,14 +75,20 @@ jobs:
           mkdir -Force portable\bin
           Copy-Item -Path target\${{ matrix.target }}\release\yt-grab.exe -Destination portable\bin\yt-grab.exe
 
-      - name: Create release zip
+      - name: Create release zip (UNIX)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           cd portable
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            Compress-Archive -Path * -DestinationPath ../yt-grab-${{ matrix.binary_name }}.zip
-          else
-            zip -r ../yt-grab-${{ matrix.binary_name }}.zip .
-          fi
+          zip -r ../yt-grab-${{ matrix.binary_name }}.zip .
+          cd ..
+
+      - name: Create release zip (WINDOWS)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd portable
+          Compress-Archive -Path * -DestinationPath ..\yt-grab-${{ matrix.binary_name }}.zip
           cd ..
 
       - name: Upload artifact
