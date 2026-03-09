@@ -84,7 +84,7 @@ jobs:
           zip -r ../../yt-grab-${{ matrix.binary_name }}.zip ./*
           cd ../..
 
-      - name: Create release zip (Windows)
+      - name: Create release zip (WINDOWS)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -106,9 +106,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release_files
+
       - name: Publish release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          files: yt-grab-*.zip
+          files: ./release_files/yt-grab-*.zip
+          overwrite_files: true
