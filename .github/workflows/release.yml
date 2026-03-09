@@ -38,21 +38,19 @@ jobs:
       - name: Build Rust binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Bundle yt-dlp and ffmpeg
+      - name: Bundle yt-dlp and ffmpeg (UNIX)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           mkdir -p portable/bin
-          if [[ "$RUNNER_OS" != "Windows" ]]; then
-            # Linux/macOS
-            curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-            curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-            mkdir -p portable/bin/ffmpeg
-            tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin/ffmpeg --strip-components=1
-            chmod +x portable/bin/yt-dlp
-            chmod +x portable/bin/ffmpeg/ffmpeg
-          fi
+          curl -L -o portable/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+          curl -L -o portable/bin/ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+          mkdir -p portable/bin/ffmpeg
+          tar -xf portable/bin/ffmpeg.tar.xz -C portable/bin/ffmpeg --strip-components=1
+          chmod +x portable/bin/yt-dlp
+          chmod +x portable/bin/ffmpeg/ffmpeg
 
-      - name: Bundle yt-dlp and ffmpeg (Windows)
+      - name: Bundle yt-dlp and ffmpeg (WINDOWS)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
