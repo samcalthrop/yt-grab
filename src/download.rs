@@ -1,8 +1,11 @@
-use std::process::Command;
+use std::process::{Command, exit};
 
 use crate::prompts::Config;
 
 pub fn download(config: Config) {
+    check_yt_dlp();
+    check_ffmpeg();
+
     let mut args: Vec<String> = vec![];
     // Download audio?
     if config.file_format == "mp3" {
@@ -21,7 +24,7 @@ pub fn download(config: Config) {
     // Download playlist?
     if config.download_playlist {
         args.push("-o".to_string());
-        args.push("\"%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s\"".to_string());
+        args.push("%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s".to_string());
     }
     // Download thumbnail?
     if config.download_thumbnail {
@@ -33,7 +36,10 @@ pub fn download(config: Config) {
     // URL
     args.push(config.url);
 
-    Command::new("yt-dlp").args(args).status().unwrap();
+    Command::new("yt-dlp")
+        .args(&args)
+        .status()
+        .expect("failed to run yt-dlp");
 
     // Command::new("ytd")
     //     .arg("-d")
@@ -44,4 +50,18 @@ pub fn download(config: Config) {
     //     .arg(config.download_thumbnail.to_string())
     //     .status()
     //     .unwrap();
+}
+
+fn check_yt_dlp() {
+    if Command::new("yt-dlp").arg("--version").output().is_err() {
+        eprintln!("yt-dlp not found. Please install it.");
+        exit(1);
+    }
+}
+
+fn check_ffmpeg() {
+    if Command::new("ffmpeg").arg("-version").output().is_err() {
+        eprintln!("ffmpeg not found. Please install it.");
+        exit(1);
+    }
 }
