@@ -13,8 +13,8 @@ if [[ "$OS" == "Linux" ]]; then
 
     if [[ "$ARCH" == "x86_64" ]]; then
         FILE="yt-grab-linux-x64"
-    elif [[ "$ARCH" == "aarch64" ]]; then
-        FILE="yt-grab-linux-arm64"
+    # elif [[ "$ARCH" == "aarch64" ]]; then
+    #     FILE="yt-grab-linux-arm64"
     else
         echo "Unsupported arch: $ARCH"
         exit 1
@@ -33,9 +33,11 @@ else
     exit 1
 fi
 
+echo "OS: $OS, ARCH: $ARCH"
+
 URL="https://github.com/$REPO/releases/download/$LATEST/$FILE"
 
-echo "Downloading {$FILE} from {https://github.com/$REPO/releases/download/$LATEST/$FILE}..."
+echo "Downloading {$FILE} from {$URL}..."
 
 curl -L "$URL" -o yt-grab
 
