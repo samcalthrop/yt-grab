@@ -16,3 +16,14 @@ curl -fsSL https://raw.githubusercontent.com/samcalthrop/yt-grab/main/scripts/in
 ```pwsh
 powershell -ExecutionPolicy Bypass -c "irm https://raw.githubusercontent.com/samcalthrop/yt-grab/main/scripts/install.ps1 | iex"
 ```
+
+# Usage
+
+Simply type the keyword `yt-grab` into your terminal and press `enter`. You'll then be guided through a dialog allowing you to choose:
+
+- File format (`mp3`/`mp4`, `default=mp3`)
+- Whether to download the entire playlist (where applicable, `default=true`)
+- Whether to download the video's thumbnail (`default=false`)
+- Where to save the downloaded content (`default=cwd`)
+
+Then, your video(s) will be downloaded!
